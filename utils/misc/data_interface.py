@@ -1,10 +1,11 @@
 
+from data.config import FOOTBALL_API_KEY
 from datetime import datetime
 import json
 import logging
-import os
 from typing import Any, Dict, List
 import requests
+from .matchday import MatchDay, Match
 
 
 class EFLData:
@@ -12,7 +13,7 @@ class EFLData:
     _API_VERSION: str = "v2"
     _COMPETITION_ID: str = "ELC"
 
-    def __init__(self) -> None:    
+    def __init__(self) -> None:
         try:
             competition_info: Any = self.get_competition()
             self.data: Dict = {}
@@ -41,11 +42,11 @@ class EFLData:
 
         Returns:
             Any: result formatted as json string 
-        """        
+        """
         return json.loads(
             requests.get(
                 uri,
-                headers={"X-Auth-Token": str(os.getenv("FOOTBALL_API_TOKEN"))},
+                headers={"X-Auth-Token": FOOTBALL_API_KEY},
                 params=filters,
             ).text
         )
@@ -79,7 +80,7 @@ class EFLData:
         URI = f"{self._BASE_URL}/{self._API_VERSION}/competitions/{self._COMPETITION_ID}/standings"
         return self.get_data(uri=URI, filters=filter)
 
-    def get_matches(self, matchday: int) -> Any:
+    def get_matches(self, matchday: int) -> MatchDay:
         """Get match object
 
         Args:
@@ -90,14 +91,23 @@ class EFLData:
         """
         filter: Dict[str, str] = {}
         try:
-            if matchday <= self.get_match_day():
+            if matchday <= self.match_day:
                 filter["matchday"] = matchday
             filter["status"] = "FINISHED"
 
-            URI = f"{self._BASE_URL}/{self._API_VERSION}/competitions/{self._COMPETITION_ID}/matches"
-            return self.get_data(uri=URI, filters=filter)
-        except TypeError:
-            return ""
+            URI: str = f"{self._BASE_URL}/{self._API_VERSION}/competitions/{self._COMPETITION_ID}/matches"
+            matchday_list: List[Any] = self.get_data(uri=URI, filters=filter)
+            matchday_cls: MatchDay = MatchDay(games=[
+                Match(home_team=match.get("homeTeam").get("name"), 
+                      away_team=match.get("awayTeam").get("name"), 
+                      home_goals=match.get("score").get("fullTime").get("homeTeam"),
+                      away_goals=match.get("score").get("fullTime").get("awayTeam")
+                      ) for match in matchday_list.get("matches")
+            ])
+            return matchday_cls
+        except TypeError as e:
+            logging.exception(e)
+            return None
 
     @property
     def name(self) -> str:
@@ -188,5 +198,6 @@ class EFLData:
             match_day (int): match day
         """
         self.data["currentMatchday"] = match_day
+
 
 di = EFLData()

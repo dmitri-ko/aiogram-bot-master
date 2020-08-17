@@ -29,3 +29,4 @@ info_menu = InlineKeyboardMarkup(row_width=2,
                                      ],
 
                                  ])
+
