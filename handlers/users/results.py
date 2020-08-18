@@ -1,5 +1,4 @@
 import logging
-
 from aiogram.types.reply_keyboard import ReplyKeyboardRemove
 from utils.misc.matchday import MatchDay
 from keyboards.inline.matchday_buttons import matchday_menu, matchdays

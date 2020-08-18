@@ -6,6 +6,7 @@ import logging
 from typing import Any, Dict, List
 import requests
 from .matchday import MatchDay, Match
+from .standings_data import Position, Standings
 
 
 class EFLData:
@@ -62,7 +63,7 @@ class EFLData:
         )
         return self.get_data(URI)
 
-    def get_standings(self, standins_type: str = "TOTAL") -> Any:
+    def get_standings(self, standins_type: str = "TOTAL") -> Standings:
         """Get standings object
 
         Args:
@@ -71,14 +72,41 @@ class EFLData:
         Returns:
             Any: standings object formatted as json string
         """
-        accepted_types: List = ["TOTAL", "HOME", "AWAY"]
+        PROMOTION_ZONE:int = 2
+        PLAYOFF_ZONE:int = 6
+        RELEGATION_ZONE:int = 22
+        
+        accepted_types: List[str] = ["TOTAL", "HOME", "AWAY"]
         filter_value: str = "TOTAL"
         if standins_type in accepted_types:
             filter_value = standins_type
 
-        filter = {"standingType": filter_value}
-        URI = f"{self._BASE_URL}/{self._API_VERSION}/competitions/{self._COMPETITION_ID}/standings"
-        return self.get_data(uri=URI, filters=filter)
+        filter: Dict[str, str] = {"standingType": filter_value}
+        URI: str = f"{self._BASE_URL}/{self._API_VERSION}/competitions/{self._COMPETITION_ID}/standings"
+        try:
+            raw_data: Dict = self.get_data(uri=URI, filters=filter)
+            standings: Standings = Standings(
+                last_updated=raw_data.get("competition").get("lastUpdated"),
+                table=[ 
+                         Position(
+                             position=pos.get("position"),
+                             team=pos.get("team").get("name"),
+                             games=pos.get("playedGames"),
+                             won=pos.get("won"),
+                             draw=pos.get("draw"),
+                             lost=pos.get("lost"),
+                             goals_for=pos.get("goalsFor"),
+                             goals_against=pos.get("goalsAgainst"),
+                             points=pos.get("points"),
+                             zone="promotion" if int(pos.get("position")) <= PROMOTION_ZONE else "playoff" if int(pos.get("position")) <= PLAYOFF_ZONE else "relegation" if int(pos.get("position")) >= RELEGATION_ZONE else ""
+                         ) for pos in raw_data.get("standings")[0].get("table")
+                       ] 
+            )
+            return standings
+        except Exception as e:
+            logging.e(e)
+            return None
+        
 
     def get_matches(self, matchday: int) -> MatchDay:
         """Get match object
