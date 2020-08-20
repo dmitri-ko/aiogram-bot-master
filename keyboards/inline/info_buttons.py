@@ -22,11 +22,16 @@ info_menu = InlineKeyboardMarkup(row_width=2,
                                      ],
                                      [
                                          InlineKeyboardButton(
-                                             text="История",
-                                             callback_data=info_callback.new(
-                                                 item="history", matchday=0)
-                                         )
+                                             text="Новости",
+                                             callback_data=info_callback.new(item="news", matchday=0))
                                      ],
 
                                  ])
 
+info_menu_full = info_menu.row(
+    InlineKeyboardButton(
+        text="История",
+        callback_data=info_callback.new(
+            item="history", matchday=0)
+    )
+)

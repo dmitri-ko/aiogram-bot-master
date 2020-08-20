@@ -4,11 +4,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-BOT_TOKEN = str(os.getenv("BOT_TOKEN"))
-FOOTBALL_API_KEY = str(os.getenv("FOOTBALL_API_TOKEN"))
-DB_FILENAME = "data/sqllite/db/media.db"
-WKHTMLTOIMAGE = str(os.getenv("WKHTMLTOIMAGE_PATH"))
-TEMPLATES_DIR = "data/templates/"
+BOT_TOKEN: str = str(os.getenv("BOT_TOKEN"))
+FOOTBALL_API_KEY: str = str(os.getenv("FOOTBALL_API_TOKEN"))
+DB_FILENAME: str = "data/sqllite/db/media.db"
+WKHTMLTOIMAGE: str = str(os.getenv("WKHTMLTOIMAGE_PATH"))
+TEMPLATES_DIR: str = "data/templates/"
+ROW_SIZE: int = 6
 
 admins = [
     296320278
